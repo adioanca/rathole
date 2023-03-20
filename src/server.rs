@@ -35,6 +35,7 @@ const TCP_POOL_SIZE: usize = 8; // The number of cached connections for TCP serv
 const UDP_POOL_SIZE: usize = 2; // The number of cached connections for UDP services
 const CHAN_SIZE: usize = 2048; // The capacity of various chans
 const HANDSHAKE_TIMEOUT: u64 = 5; // Timeout for transport handshake
+const CONNECTION_ALIVE_CHECK_INTERVAL: u64 = 10; // How often to check if a connection is still alive
 
 // The entrypoint of running a server
 pub async fn run_server(
@@ -524,6 +525,14 @@ impl<T: Transport> ControlChannel<T> {
                                 error!("{:#}", e);
                                 break;
                             }
+                }
+                // check for ISO/OSI Layer 4 connection closed/lost. See issue #224
+                _ = time::sleep(Duration::from_secs(CONNECTION_ALIVE_CHECK_INTERVAL)), if self.heartbeat_interval == 0 => {
+                    if let Ok(is_ok) = T::check_connection_alive(&self.conn).await {
+                        if !is_ok {
+                            break;
+                        }
+                    }
                 }
                 // Wait for the shutdown signal
                 _ = self.shutdown_rx.recv() => {

@@ -6,6 +6,7 @@ use anyhow::{anyhow, Context, Result};
 use async_trait::async_trait;
 use snowstorm::{Builder, NoiseParams, NoiseStream};
 use tokio::net::{TcpListener, TcpStream, ToSocketAddrs};
+use tokio::io::Interest;
 
 pub struct NoiseTransport {
     tcp: TcpTransport,
@@ -103,5 +104,18 @@ impl Transport for NoiseTransport {
             .await
             .with_context(|| "Failed to do noise handshake")?;
         return Ok(conn);
+    }
+
+    async fn check_connection_alive(conn: &Self::Stream) -> Result<bool> {
+        let tcp_stream = conn.get_inner();
+        let ready = tcp_stream.ready(Interest::READABLE | Interest::WRITABLE).await;
+        match ready {
+            Ok(ready_data) => {
+                return Ok(!ready_data.is_read_closed());
+            }
+            Err(_e) => {
+                return Ok(false);
+            }
+        }
     }
 }

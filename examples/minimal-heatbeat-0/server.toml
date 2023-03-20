@@ -1,0 +1,14 @@
+[server]
+bind_addr = "0.0.0.0:2333"
+default_token = "123"
+heartbeat_interval = 0
+
+[server.transport]
+type = "tcp"
+
+[server.transport.tcp]
+keepalive_interval = 300
+keepalive_secs = 3
+
+[server.services.foo1]
+bind_addr = "0.0.0.0:5202"

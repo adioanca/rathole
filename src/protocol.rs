@@ -229,7 +229,7 @@ pub async fn read_control_cmd<T: AsyncRead + AsyncWrite + Unpin>(
     let mut bytes = vec![0u8; PACKET_LEN.c_cmd];
     conn.read_exact(&mut bytes)
         .await
-        .with_context(|| "Failed to read cmd")?;
+        .with_context(|| "Failed to read control cmd")?;
     bincode::deserialize(&bytes).with_context(|| "Failed to deserialize control cmd")
 }
 
@@ -239,6 +239,6 @@ pub async fn read_data_cmd<T: AsyncRead + AsyncWrite + Unpin>(
     let mut bytes = vec![0u8; PACKET_LEN.d_cmd];
     conn.read_exact(&mut bytes)
         .await
-        .with_context(|| "Failed to read cmd")?;
+        .with_context(|| "Failed to read data cmd")?;
     bincode::deserialize(&bytes).with_context(|| "Failed to deserialize data cmd")
 }

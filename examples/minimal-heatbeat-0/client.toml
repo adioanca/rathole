@@ -1,0 +1,15 @@
+[client]
+remote_addr = "localhost:2333"
+retry_interval = 3
+default_token = "123"
+heartbeat_timeout = 0
+
+[client.transport]
+type = "tcp"
+
+[client.transport.tcp]
+keepalive_interval = 300
+keepalive_secs = 3
+
+[client.services.foo1]
+local_addr = "127.0.0.1:80"

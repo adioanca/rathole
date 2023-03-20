@@ -9,6 +9,7 @@ use std::fs;
 use tokio::net::{TcpListener, TcpStream, ToSocketAddrs};
 use tokio_native_tls::native_tls::{self, Certificate, Identity};
 use tokio_native_tls::{TlsAcceptor, TlsConnector, TlsStream};
+use tokio::io::Interest;
 
 #[derive(Debug)]
 pub struct TlsTransport {
@@ -107,5 +108,18 @@ impl Transport for TlsTransport {
                 conn,
             )
             .await?)
+    }
+
+    async fn check_connection_alive(conn: &Self::Stream) -> Result<bool> {
+        let tcp_stream = conn.get_ref().get_ref().get_ref();
+        let ready = tcp_stream.ready(Interest::READABLE | Interest::WRITABLE).await;
+        match ready {
+            Ok(ready_data) => {
+                return Ok(!ready_data.is_read_closed());
+            }
+            Err(_e) => {
+                return Ok(false);
+            }
+        }
     }
 }

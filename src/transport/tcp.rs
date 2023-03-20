@@ -8,6 +8,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use std::net::SocketAddr;
 use tokio::net::{TcpListener, TcpStream, ToSocketAddrs};
+use tokio::io::Interest;
 
 #[derive(Debug)]
 pub struct TcpTransport {
@@ -50,5 +51,17 @@ impl Transport for TcpTransport {
         let s = tcp_connect_with_proxy(addr, self.cfg.proxy.as_ref()).await?;
         self.socket_opts.apply(&s);
         Ok(s)
+    }
+
+    async fn check_connection_alive(conn: &Self::Stream) -> Result<bool> {
+        let ready = conn.ready(Interest::READABLE | Interest::WRITABLE).await;
+        match ready {
+            Ok(ready_data) => {
+                return Ok(!ready_data.is_read_closed());
+            }
+            Err(_e) => {
+                return Ok(false);
+            }
+        }
     }
 }
